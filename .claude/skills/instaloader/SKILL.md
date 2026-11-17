@@ -19,7 +19,7 @@ instaloader --version
 | Task | Command |
 |---|---|
 | Download a public profile | `instaloader PROFILE` |
-| Only the profile picture | `instaloader --no-posts --no-profile-pic=false PROFILE` (or `--profile-pic-only`) |
+| Only the profile picture | `instaloader --no-posts PROFILE` |
 | A single post by shortcode | `instaloader -- -SHORTCODE` (shortcode from `instagram.com/p/SHORTCODE/`) |
 | Hashtag | `instaloader "#hashtag" --count 50` |
 | Skip videos / thumbnails | `--no-videos --no-video-thumbnails` |
