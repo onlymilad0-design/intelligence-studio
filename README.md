@@ -11,6 +11,18 @@
 | 5 | **Task Observer** | يلاحظ الأغلاط المتكررة ويحفظها كقواعد في SKILL.md | Skill في `.claude/skills/task-observer/` |
 | 6 | **Graphify** | يحوّل المشروع لخريطة معرفة (knowledge graph) تسأل عنها بدل البحث في الملفات | Skill في `.claude/skills/graphify/` + hooks في `.claude/settings.json` + الأداة `pip install graphifyy` |
 
+| 7 | **agency-agents** | 283 وكيل متخصص (تسويق، مبيعات، برمجة...) كـ subagents | `~/.claude/agents/` |
+| 8 | **codebase-memory-mcp** | ذاكرة/خريطة للكود عبر MCP، استعلامات أسرع وتوكنز أقل | `pip install codebase-memory-mcp` + `codebase-memory-mcp install -y` |
+| 9 | **OpenMontage** | استوديو إنتاج فيديو كامل بالذكاء الاصطناعي | `~/OpenMontage` + skill `openmontage` |
+
+### تثبيت كل شي لكل المشاريع (مستوى المستخدم)
+
+```bash
+./scripts/setup-global.sh
+```
+
+نفس السكربت محفوظ كـ setup script في بيئة Claude Code الافتراضية، فيشتغل تلقائياً مع كل جلسة جديدة.
+
 ### التثبيت
 
 ```bash
