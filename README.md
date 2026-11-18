@@ -1,6 +1,6 @@
 # intelligence-studio
 
-## أدوات Claude Code الخمسة
+## أدوات Claude Code
 
 | # | الأداة | وش تسوي | كيف مركّبة هنا |
 |---|---|---|---|
@@ -9,6 +9,7 @@
 | 3 | **Headroom** | يضغط اللوقات والملفات قبل ما توصل لـ Claude ويقلل التوكنز | `pip install "headroom-ai[code]"` |
 | 4 | **claude-code-setup** | Plugin رسمي من Anthropic: يحلل مشروعك ويقترح hooks وskills وMCP | Plugin في `.claude/settings.json` |
 | 5 | **Task Observer** | يلاحظ الأغلاط المتكررة ويحفظها كقواعد في SKILL.md | Skill في `.claude/skills/task-observer/` |
+| 6 | **Graphify** | يحوّل المشروع لخريطة معرفة (knowledge graph) تسأل عنها بدل البحث في الملفات | Skill في `.claude/skills/graphify/` + hooks في `.claude/settings.json` + الأداة `pip install graphifyy` |
 
 ### التثبيت
 
@@ -25,6 +26,8 @@
 - **Headroom**: `headroom wrap claude` (يشغّل Claude Code من خلال proxy الضغط)
 - **OmniRoute**: `OMNIROUTE_SERVER_HOST=127.0.0.1 omniroute serve`، ثم افتح `http://localhost:20128` وأضف المزوّدين، ثم `omniroute setup` لربطه بـ Claude Code.
 - **Task Observer**: يشتغل أثناء المهام. للأفضل أضف تعليمات تفعيله في `CLAUDE.md` (شوف `references/environments.md` داخل الـ skill).
+
+- **Graphify**: اكتب `/graphify .` داخل Claude Code عشان يبني الخريطة في `graphify-out/`، وبعد أي تعديل شغّل `graphify update .`
 
 ### تنبيهات
 

@@ -5,4 +5,5 @@
 set -euo pipefail
 pip install -U "headroom-ai[code]"   # Headroom: context compression proxy
 npm install -g omniroute             # OmniRoute: local AI gateway (http://localhost:20128)
+pip install -U graphifyy              # Graphify CLI (the /graphify skill is in .claude/skills/graphify)
 echo "Done. Try:  headroom wrap claude   |   OMNIROUTE_SERVER_HOST=127.0.0.1 omniroute serve"
