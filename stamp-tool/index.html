@@ -86,6 +86,8 @@ input[type=range]{accent-color:var(--blue);width:100%;height:28px}
 .pad{border:1px solid var(--line);border-radius:10px;background:#fff;touch-action:none;width:100%;height:240px;display:block;cursor:crosshair}
 .toast{position:fixed;bottom:calc(16px + env(safe-area-inset-bottom,0px));left:50%;transform:translateX(-50%);background:var(--ink);color:var(--panel);padding:10px 16px;border-radius:10px;font-size:14px;z-index:60;max-width:calc(100% - 32px)}
 .busy{font-size:14px;color:var(--muted)}
+.saved{color:light-dark(#1d7a3a,#6fd492);white-space:nowrap}
+.saved.err{color:var(--red)}
 @media(max-width:860px){.wrap{grid-template-columns:minmax(0,1fr)}.tray{position:static}#selEmpty{display:none}#selCard:has(#selCtl[hidden]){display:none}.lib{grid-template-columns:repeat(4,minmax(0,1fr))}}
 @media(max-width:600px){.top p{display:none}.cmp{grid-template-columns:1fr}.chk{height:170px}.lib{grid-template-columns:repeat(3,minmax(0,1fr))}.page .num{bottom:-22px}}
 @media(prefers-reduced-motion:reduce){*{transition:none!important}}
@@ -114,7 +116,8 @@ input[type=range]{accent-color:var(--blue);width:100%;height:28px}
         <button class="btn blue" id="addStampBtn" type="button">ختم من الألبوم</button>
         <button class="btn" id="drawBtn" type="button">ارسم توقيع</button>
       </div>
-      <p class="hint">اضغط على أي ختم لوضعه على الصفحة الظاهرة أمامك. تُحفظ أختامك في هذا المتصفح.</p>
+      <p class="hint">اضغط على أي ختم لوضعه على الصفحة الظاهرة أمامك. أختامك وشغلك يُحفظان تلقائياً.</p>
+      <div class="adds"><button class="btn" id="bakBtn" type="button">نسخة احتياطية</button><button class="btn" id="resBtn" type="button">استرجاع نسخة</button></div>
     </section>
     <section class="card" id="selCard">
       <h2>الختم المحدد</h2>
@@ -133,13 +136,14 @@ input[type=range]{accent-color:var(--blue);width:100%;height:28px}
   </aside>
 
   <section class="desk">
-    <div class="docbar"><span>الملف: <b id="docName">خطاب تجريبي (مثال)</b></span><span id="docInfo"></span></div>
+    <div class="docbar"><span>الملف: <b id="docName">خطاب تجريبي (مثال)</b></span><span><span id="docInfo"></span> <span id="saveSt" class="saved"></span></span></div>
     <div id="pages" style="width:100%;display:grid;gap:40px;justify-items:center"></div>
   </section>
 </main>
 
 <input type="file" id="docIn" accept="application/pdf,image/*" hidden>
 <input type="file" id="stampIn" accept="image/*" hidden>
+<input type="file" id="bakIn" accept=".json,application/json" hidden>
 
 <div class="modal" id="bgModal" hidden>
   <div class="dlg" role="dialog" aria-modal="true" aria-labelledby="bgT">
@@ -204,9 +208,39 @@ const undo = () => { if (!hist.length) return; places = JSON.parse(hist.pop()); 
 
 const loadImg = url => new Promise((ok, no) => { const i = new Image(); i.onload = () => ok(i); i.onerror = no; i.src = url; });
 
-function saveLib() {
-  try { localStorage.setItem('stamp-lib-v1', JSON.stringify(stamps.filter(s => !s.sample).map(s => ({ id: s.id, url: s.url })))); }
-  catch (e) { toast('تعذّر حفظ الأختام في المتصفح (المساحة ممتلئة أو التخزين مغلق).'); }
+/* ---------- storage: IndexedDB (large, durable), localStorage as fallback ---------- */
+const DB = (() => {
+  let conn;
+  const open = () => conn || (conn = new Promise((ok, no) => { try { const r = indexedDB.open('stamp-tool', 1); r.onupgradeneeded = () => r.result.createObjectStore('kv'); r.onsuccess = () => ok(r.result); r.onerror = () => no(r.error); } catch (e) { no(e); } }));
+  const run = async (mode, fn) => { const db = await open(); return new Promise((ok, no) => { const t = db.transaction('kv', mode); const req = fn(t.objectStore('kv')); t.oncomplete = () => ok(req.result); t.onerror = () => no(t.error); t.onabort = () => no(t.error); }); };
+  return { get: k => run('readonly', st => st.get(k)), set: (k, v) => run('readwrite', st => st.put(v, k)) };
+})();
+function setStatus(m, err) { const e = $('saveSt'); e.textContent = m; e.classList.toggle('err', !!err); }
+const libList = () => stamps.map(s => ({ id: s.id, url: s.url }));
+async function saveLib() {
+  try { await DB.set('lib', libList()); return; } catch (e) {}
+  try { localStorage.setItem('stamp-lib-v1', JSON.stringify(libList())); }
+  catch (e) { toast('تعذّر حفظ الأختام في هذا المتصفح. استخدم «نسخة احتياطية» لحفظها في ملف.', 5000); }
+}
+async function loadLib() {
+  try { const v = await DB.get('lib'); if (v) return v; } catch (e) {}
+  try { const v = localStorage.getItem('stamp-lib-v1'); if (v) return JSON.parse(v); } catch (e) {}
+  return null;   // never saved before
+}
+let sessT, sessOk = true;
+function saveSession() {
+  if (!doc || doc.sample) return;
+  clearTimeout(sessT); setStatus('جاري الحفظ…');
+  sessT = setTimeout(async () => {
+    try {
+      await DB.set('session', { kind: doc.kind, name: doc.name, type: doc.type || '', data: doc.kind === 'pdf' ? doc.bytes : doc.file, places });
+      setStatus('✓ محفوظ تلقائياً'); sessOk = true;
+    } catch (e) {
+      setStatus('لم يُحفظ', true);
+      if (sessOk) toast('تعذّر حفظ الشغل في المتصفح. حمّل الملف المختوم قبل الإغلاق.', 5000);
+      sessOk = false;
+    }
+  }, 350);
 }
 async function addStamp(url, opts = {}) {
   const img = await loadImg(url);
@@ -287,17 +321,18 @@ async function openImage(file) {
   const sc = Math.min(1, 1600 / img.naturalWidth);
   c.width = Math.round(img.naturalWidth * sc); c.height = Math.round(img.naturalHeight * sc);
   c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
-  doc = { kind: 'image', name: file.name, src: img, type: file.type, pages: [{ w: img.naturalWidth, h: img.naturalHeight, rot: 0, canvas: c }] };
+  doc = { kind: 'image', name: file.name, src: img, type: file.type, file, pages: [{ w: img.naturalWidth, h: img.naturalHeight, rot: 0, canvas: c }] };
 }
-async function openDoc(file) {
+async function openDoc(file, restore) {
   if (!file) return;
   try {
     if (file.type === 'application/pdf' || /\.pdf$/i.test(file.name)) await openPdf(file);
     else if (file.type.startsWith('image/')) await openImage(file);
     else return toast('نوع الملف غير مدعوم. استخدم PDF أو صورة.');
-    hist.length = 0; $('undoBtn').disabled = true; places = []; selId = null;
+    hist.length = 0; $('undoBtn').disabled = true; places = restore ? restore.slice() : []; selId = null;
     buildPages(); renderPlaces();
-    toast('تم فتح الملف. اختر ختماً لوضعه.');
+    if (restore) { setStatus('✓ محفوظ تلقائياً'); toast('رجعنا لآخر شغلك على «' + file.name + '».'); }
+    else { saveSession(); toast('تم فتح الملف. اختر ختماً لوضعه.'); }
   } catch (e) { console.error(e); $('pages').innerHTML = ''; toast('تعذّر فتح الملف. قد يكون تالفاً أو محمياً بكلمة مرور.'); if (doc) { buildPages(); renderPlaces(); } }
 }
 
@@ -320,6 +355,7 @@ function renderPlaces() {
     pg.el.append(d);
   }
   syncSel();
+  saveSession();
 }
 function syncSel() {
   const p = places.find(q => q.id === selId);
@@ -347,7 +383,7 @@ function startDrag(e, p, el) {
     else { let r = st.rot + (Math.atan2(ev.clientY - cyp, ev.clientX - cxp) - st.ang) * 180 / Math.PI; r = ((r + 540) % 360) - 180; if (Math.abs(r) < 3) r = 0; p.rot = r; }
     applyStyle(p, el);
   };
-  const up = () => { el.removeEventListener('pointermove', mv); el.removeEventListener('pointerup', up); el.removeEventListener('pointercancel', up); if (moved) { hist.push(before); $('undoBtn').disabled = false; } syncSel(); };
+  const up = () => { el.removeEventListener('pointermove', mv); el.removeEventListener('pointerup', up); el.removeEventListener('pointercancel', up); if (moved) { hist.push(before); $('undoBtn').disabled = false; saveSession(); } syncSel(); };
   el.addEventListener('pointermove', mv); el.addEventListener('pointerup', up); el.addEventListener('pointercancel', up);
 }
 function applyStyle(p, el) {
@@ -360,7 +396,7 @@ const selP = () => places.find(q => q.id === selId);
 let sliderSnap = false;
 for (const [rid, fn] of [['szR', (p, v) => p.w = v / 100], ['rtR', (p, v) => p.rot = v], ['opR', (p, v) => p.op = v / 100]]) {
   $(rid).addEventListener('pointerdown', () => sliderSnap = false);
-  $(rid).addEventListener('input', e => { const p = selP(); if (!p) return; if (!sliderSnap) { snap(); sliderSnap = true; } fn(p, +e.target.value); const el = document.querySelector('.pl.on'); if (el) applyStyle(p, el); syncSel(); });
+  $(rid).addEventListener('input', e => { const p = selP(); if (!p) return; if (!sliderSnap) { snap(); sliderSnap = true; } fn(p, +e.target.value); const el = document.querySelector('.pl.on'); if (el) applyStyle(p, el); syncSel(); saveSession(); });
   $(rid).addEventListener('change', () => sliderSnap = false);
 }
 $('delBtn').onclick = () => { const p = selP(); if (!p) return; snap(); places = places.filter(q => q !== p); selId = null; renderPlaces(); };
@@ -560,6 +596,16 @@ $('docIn').onchange = e => { openDoc(e.target.files[0]); e.target.value = ''; };
 $('addStampBtn').onclick = () => $('stampIn').click();
 $('stampIn').onchange = e => { const f = e.target.files[0]; if (f) openBgEditor(f); e.target.value = ''; };
 $('drawBtn').onclick = openPad;
+$('bakBtn').onclick = () => { if (!stamps.length) return toast('لا توجد أختام لحفظها.'); saveFile('أختامي-نسخة-احتياطية.json', new Blob([JSON.stringify({ app: 'stamp-tool', v: 1, stamps: libList() })], { type: 'application/json' })); };
+$('resBtn').onclick = () => $('bakIn').click();
+$('bakIn').onchange = async e => {
+  const f = e.target.files[0]; e.target.value = ''; if (!f) return;
+  try {
+    const j = JSON.parse(await f.text()); let n = 0;
+    for (const s of (j && j.stamps) || []) { if (typeof s.url !== 'string' || !s.url.startsWith('data:image/') || stamps.some(t => t.id === s.id || t.url === s.url)) continue; await addStamp(s.url, { id: String(s.id || uid()), quiet: true }); n++; }
+    await saveLib(); toast(n ? 'تم استرجاع ' + n + ' ختم.' : 'كل الأختام موجودة أصلاً.');
+  } catch (err) { toast('الملف ليس نسخة احتياطية صالحة.'); }
+};
 let dragN = 0;
 addEventListener('dragenter', e => { e.preventDefault(); dragN++; $('drop').hidden = false; });
 addEventListener('dragleave', () => { if (--dragN <= 0) { dragN = 0; $('drop').hidden = true; } });
@@ -617,18 +663,25 @@ function sampleDoc() {
 }
 
 async function boot() {
+  try { navigator.storage && navigator.storage.persist && navigator.storage.persist(); } catch (e) {}
   try { await Promise.race([Promise.all([document.fonts.load('700 40px "Noto Kufi Arabic"'), document.fonts.load('400 20px "IBM Plex Sans Arabic"'), document.fonts.load('600 20px "IBM Plex Sans Arabic"')]), new Promise(r => setTimeout(r, 2500))]); } catch (e) {}
-  let saved = [];
-  try { saved = JSON.parse(localStorage.getItem('stamp-lib-v1') || '[]'); } catch (e) {}
-  for (const s of saved) { try { await addStamp(s.url, { id: s.id, quiet: true }); } catch (e) {} }
-  const st = await addStamp(sampleStamp(), { sample: true, quiet: true });
-  const sg = await addStamp(sampleSign(), { sample: true, quiet: true });
+  const saved = await loadLib();
+  if (saved) { for (const s of saved) { try { await addStamp(s.url, { id: s.id, quiet: true }); } catch (e) {} } }
+  else { await addStamp(sampleStamp(), { id: 'sample-stamp', quiet: true }); await addStamp(sampleSign(), { id: 'sample-sign', quiet: true }); saveLib(); }
+  renderLib();
+  let sess = null;
+  try { sess = await DB.get('session'); } catch (e) {}
+  if (sess && sess.data) {
+    const file = new File([sess.data], sess.name, { type: sess.type || (sess.kind === 'pdf' ? 'application/pdf' : 'image/png') });
+    await openDoc(file, sess.places || []);
+    if (doc && !doc.sample) return;
+  }
   const c = sampleDoc();
-  doc = { kind: 'image', name: 'خطاب تجريبي (مثال)', src: c, type: 'image/png', pages: [{ w: c.width, h: c.height, rot: 0, canvas: c }] };
+  doc = { kind: 'image', sample: true, name: 'خطاب تجريبي (مثال)', src: c, type: 'image/png', pages: [{ w: c.width, h: c.height, rot: 0, canvas: c }] };
   const view = document.createElement('canvas'); view.width = c.width; view.height = c.height; view.getContext('2d').drawImage(c, 0, 0); doc.pages[0].canvas = view;
   buildPages();
-  places = [{ id: uid(), page: 0, sid: st.id, cx: 0.27, cy: 0.735, w: 0.26, rot: -12, op: 0.92 }, { id: uid(), page: 0, sid: sg.id, cx: 0.64, cy: 0.725, w: 0.3, rot: 0, op: 1 }];
-  selId = places[0].id;
+  places = [{ id: uid(), page: 0, sid: 'sample-stamp', cx: 0.27, cy: 0.735, w: 0.26, rot: -12, op: 0.92 }, { id: uid(), page: 0, sid: 'sample-sign', cx: 0.64, cy: 0.725, w: 0.3, rot: 0, op: 1 }];
+  selId = places.some(p => stampOf(p)) ? places[0].id : null;
   renderPlaces();
 }
 boot();
