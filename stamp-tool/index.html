@@ -1,0 +1,638 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>ختم وتوقيع الملفات</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600&family=Noto+Kufi+Arabic:wght@700&display=swap" rel="stylesheet">
+<style>
+/* VOICE everyday tool for office paperwork
+   IDEA a desk blotter: the paper sits in the middle, the stamp tray beside it, ink-blue and seal-red
+   PICTURE the document itself, drawn large, with the stamps sitting on it and draggable
+   COLOUR warm grey desk ground, ink-blue header band #1f3bb3, seal red #d2232a for the main action
+   TYPE Noto Kufi Arabic 700 display + IBM Plex Sans Arabic text
+   LAYOUT laptop: tray column on the right, paper fills the rest; phone: title, paper, tray as a sticky bottom strip */
+:root{color-scheme:light dark;--bg:light-dark(#e7e4de,#15171c);--ink:light-dark(#16181d,#eceef3);--muted:light-dark(#5b5f69,#a2a7b3);--panel:light-dark(#fbfaf8,#1f222a);--line:light-dark(#d3cfc6,#343844);--blue:light-dark(#1f3bb3,#7f97ff);--band:#1f3bb3;--red:#d2232a;--sel:light-dark(#1f3bb3,#8ea4ff)}
+:root[data-theme=light]{color-scheme:light}
+:root[data-theme=dark]{color-scheme:dark}
+*{box-sizing:border-box;min-width:0}
+html,body{margin:0}
+[hidden]{display:none!important}
+body{background:var(--bg);color:var(--ink);font:16px/1.55 "IBM Plex Sans Arabic",Tahoma,system-ui,sans-serif;overflow-x:clip}
+button,input,select{font:inherit;color:inherit}
+.top{background:var(--band);color:#fff;padding-block:18px;padding-left:max(5vw,16px,env(safe-area-inset-left,0px));padding-right:max(5vw,16px,env(safe-area-inset-right,0px));display:flex;flex-wrap:wrap;gap:12px 20px;align-items:center;justify-content:space-between}
+.top h1{font:700 clamp(24px,3.4vw,36px)/1.1 "Noto Kufi Arabic","IBM Plex Sans Arabic",sans-serif;margin:0;letter-spacing:0}
+.top p{margin:2px 0 0;opacity:.85;font-size:15px}
+.acts{display:flex;flex-wrap:wrap;gap:8px}
+.btn{border:1px solid var(--line);background:var(--panel);border-radius:10px;padding:9px 14px;min-height:44px;cursor:pointer;display:inline-flex;align-items:center;gap:8px;white-space:nowrap}
+.btn:hover{border-color:var(--blue)}
+.btn:focus-visible{outline:3px solid var(--blue);outline-offset:2px}
+.btn:active{transform:translateY(1px)}
+.btn[disabled]{opacity:.45;cursor:default}
+.top .btn{background:rgba(255,255,255,.12);border-color:rgba(255,255,255,.35);color:#fff}
+.top .btn:hover{background:rgba(255,255,255,.22)}
+.top .btn.main{background:var(--red);border-color:var(--red)}
+.btn.main{background:var(--red);border-color:var(--red);color:#fff}
+.btn.blue{background:var(--blue);border-color:var(--blue);color:light-dark(#fff,#0d1330)}
+.wrap{display:grid;grid-template-columns:300px minmax(0,1fr);gap:20px;padding-block:20px 40px;padding-left:max(5vw,16px,env(safe-area-inset-left,0px));padding-right:max(5vw,16px,env(safe-area-inset-right,0px));align-items:start}
+.tray{position:sticky;top:16px;display:grid;gap:14px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:14px}
+.card h2{font-size:16px;margin:0 0 10px;font-weight:600}
+.lib{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.st{position:relative;aspect-ratio:1;border:1px solid var(--line);border-radius:10px;cursor:pointer;padding:6px;display:grid;place-items:center;background:repeating-conic-gradient(light-dark(#f0eee9,#262a33) 0 25%,transparent 0 50%) 0 0/14px 14px}
+.st:hover{border-color:var(--blue)}
+.st img{max-width:100%;max-height:100%;pointer-events:none}
+.st .x{position:absolute;top:-7px;left:-7px;width:24px;height:24px;border-radius:50%;border:0;background:var(--ink);color:var(--panel);font-size:14px;line-height:24px;cursor:pointer;display:none}
+.st:hover .x,.st:focus-within .x{display:block}
+.adds{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px}
+.adds .btn{justify-content:center;white-space:normal;text-align:center;line-height:1.3}
+.hint{font-size:13px;color:var(--muted);margin:8px 0 0}
+.row{display:grid;grid-template-columns:70px minmax(0,1fr) 48px;gap:8px;align-items:center;font-size:14px;margin:6px 0}
+.row output{font-variant-numeric:tabular-nums;text-align:left;white-space:nowrap}
+input[type=range]{accent-color:var(--blue);width:100%;height:28px}
+.selbtns{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+.selbtns .btn{flex:1 1 auto;justify-content:center;min-height:40px;padding:6px 10px}
+.empty{color:var(--muted);font-size:14px;margin:0}
+.desk{display:grid;gap:18px;justify-items:center}
+.docbar{width:100%;display:flex;flex-wrap:wrap;justify-content:space-between;gap:8px;align-items:center;font-size:14px;color:var(--muted)}
+.docbar b{color:var(--ink);font-weight:600;overflow-wrap:anywhere}
+.page{position:relative;width:100%;max-width:860px;background:#fff;box-shadow:0 1px 2px rgba(0,0,0,.18),0 6px 18px rgba(0,0,0,.08);touch-action:pan-y;user-select:none;-webkit-user-select:none}
+.page>canvas{display:block;width:100%;height:auto}
+.page .num{position:absolute;bottom:-24px;left:0;right:0;text-align:center;font-size:12px;color:var(--muted)}
+.pl{position:absolute;cursor:grab;touch-action:none}
+.pl img{width:100%;height:100%;display:block;pointer-events:none}
+.pl.on{outline:1.5px dashed var(--sel);outline-offset:3px}
+.pl.on:active{cursor:grabbing}
+.hd{position:absolute;width:30px;height:30px;border-radius:50%;background:var(--sel);color:#fff;border:2px solid #fff;display:none;place-items:center;font-size:14px;line-height:1;touch-action:none;box-shadow:0 1px 4px rgba(0,0,0,.3)}
+.pl.on .hd{display:grid}
+.hd.sz{right:-17px;bottom:-17px;cursor:nwse-resize}
+.hd.rt{left:50%;top:-44px;margin-left:-15px;cursor:grab}
+.hd.dl{left:-17px;top:-17px;background:var(--red);cursor:pointer}
+.drop{position:fixed;inset:0;background:color-mix(in srgb,var(--band) 75%,transparent);color:#fff;display:grid;place-items:center;font:700 26px "Noto Kufi Arabic",sans-serif;z-index:50;pointer-events:none}
+.modal{position:fixed;inset:0;background:rgba(10,12,20,.55);display:grid;place-items:center;z-index:40;padding:16px}
+.dlg{background:var(--panel);border-radius:16px;width:min(720px,100%);max-height:calc(100svh - 32px);overflow:auto;padding:18px;display:grid;gap:12px}
+.dlg h3{margin:0;font:700 20px "Noto Kufi Arabic",sans-serif}
+.cmp{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.cmp figure{margin:0;display:grid;gap:4px;font-size:13px;color:var(--muted)}
+.chk{border:1px solid var(--line);border-radius:10px;height:230px;display:grid;place-items:center;padding:8px;background:repeating-conic-gradient(light-dark(#ecebe7,#2a2e37) 0 25%,light-dark(#fff,#1f222a) 0 50%) 0 0/16px 16px}
+.chk canvas,.chk img{max-width:100%;max-height:100%}
+.inks{display:flex;flex-wrap:wrap;gap:8px;align-items:center;font-size:14px}
+.ink{width:34px;height:34px;border-radius:50%;border:2px solid var(--line);cursor:pointer;padding:0}
+.ink[aria-pressed=true]{outline:3px solid var(--blue);outline-offset:2px}
+.ink.orig{background:conic-gradient(#1f3bb3,#d2232a,#111,#2a8a3e,#1f3bb3)}
+.foot{display:flex;flex-wrap:wrap;gap:8px;justify-content:flex-start}
+.pad{border:1px solid var(--line);border-radius:10px;background:#fff;touch-action:none;width:100%;height:240px;display:block;cursor:crosshair}
+.toast{position:fixed;bottom:calc(16px + env(safe-area-inset-bottom,0px));left:50%;transform:translateX(-50%);background:var(--ink);color:var(--panel);padding:10px 16px;border-radius:10px;font-size:14px;z-index:60;max-width:calc(100% - 32px)}
+.busy{font-size:14px;color:var(--muted)}
+@media(max-width:860px){.wrap{grid-template-columns:minmax(0,1fr)}.tray{position:static}#selEmpty{display:none}#selCard:has(#selCtl[hidden]){display:none}.lib{grid-template-columns:repeat(4,minmax(0,1fr))}}
+@media(max-width:600px){.top p{display:none}.cmp{grid-template-columns:1fr}.chk{height:170px}.lib{grid-template-columns:repeat(3,minmax(0,1fr))}.page .num{bottom:-22px}}
+@media(prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<header class="top">
+  <div>
+    <h1>ختم وتوقيع الملفات</h1>
+    <p>افتح ملف PDF أو صورة، أضف ختمك من الألبوم وتُزال خلفيته تلقائياً، ثم اسحبه لمكانه.</p>
+  </div>
+  <div class="acts">
+    <button class="btn" id="openBtn" type="button">افتح ملف</button>
+    <button class="btn" id="undoBtn" type="button" disabled>تراجع</button>
+    <button class="btn main" id="pdfBtn" type="button">تحميل PDF</button>
+    <button class="btn" id="pngBtn" type="button">تحميل صورة</button>
+  </div>
+</header>
+
+<main class="wrap">
+  <aside class="tray">
+    <section class="card">
+      <h2>أختامي وتوقيعاتي</h2>
+      <div class="lib" id="lib"></div>
+      <div class="adds">
+        <button class="btn blue" id="addStampBtn" type="button">ختم من الألبوم</button>
+        <button class="btn" id="drawBtn" type="button">ارسم توقيع</button>
+      </div>
+      <p class="hint">اضغط على أي ختم لوضعه على الصفحة الظاهرة أمامك. تُحفظ أختامك في هذا المتصفح.</p>
+    </section>
+    <section class="card" id="selCard">
+      <h2>الختم المحدد</h2>
+      <p class="empty" id="selEmpty">اضغط على ختم فوق الصفحة لتعديله.</p>
+      <div id="selCtl" hidden>
+        <label class="row"><span>الحجم</span><input type="range" id="szR" min="3" max="90" step="0.5"><output id="szO"></output></label>
+        <label class="row"><span>الدوران</span><input type="range" id="rtR" min="-180" max="180" step="1"><output id="rtO"></output></label>
+        <label class="row"><span>الشفافية</span><input type="range" id="opR" min="20" max="100" step="1"><output id="opO"></output></label>
+        <div class="selbtns">
+          <button class="btn" id="dupBtn" type="button">نسخة</button>
+          <button class="btn" id="allBtn" type="button">على كل الصفحات</button>
+          <button class="btn" id="delBtn" type="button">حذف</button>
+        </div>
+      </div>
+    </section>
+  </aside>
+
+  <section class="desk">
+    <div class="docbar"><span>الملف: <b id="docName">خطاب تجريبي (مثال)</b></span><span id="docInfo"></span></div>
+    <div id="pages" style="width:100%;display:grid;gap:40px;justify-items:center"></div>
+  </section>
+</main>
+
+<input type="file" id="docIn" accept="application/pdf,image/*" hidden>
+<input type="file" id="stampIn" accept="image/*" hidden>
+
+<div class="modal" id="bgModal" hidden>
+  <div class="dlg" role="dialog" aria-modal="true" aria-labelledby="bgT">
+    <h3 id="bgT">إزالة خلفية الختم</h3>
+    <div class="cmp">
+      <figure><div class="chk"><img id="bgSrc" alt="الصورة الأصلية"></div><figcaption>الأصل</figcaption></figure>
+      <figure><div class="chk"><canvas id="bgOut"></canvas></div><figcaption id="bgNote">بعد إزالة الخلفية</figcaption></figure>
+    </div>
+    <label class="row"><span>الدقة</span><input type="range" id="tolR" min="0" max="160" value="60"><output id="tolO">60</output></label>
+    <label class="row"><span>نعومة الحواف</span><input type="range" id="softR" min="1" max="120" value="40"><output id="softO">40</output></label>
+    <div class="inks" id="inks"><span>لون الحبر:</span>
+      <button class="ink orig" type="button" data-c="" aria-pressed="true" title="اللون الأصلي" aria-label="اللون الأصلي"></button>
+      <button class="ink" type="button" data-c="#1f3bb3" style="background:#1f3bb3" aria-pressed="false" aria-label="أزرق"></button>
+      <button class="ink" type="button" data-c="#111111" style="background:#111" aria-pressed="false" aria-label="أسود"></button>
+      <button class="ink" type="button" data-c="#c81e28" style="background:#c81e28" aria-pressed="false" aria-label="أحمر"></button>
+      <button class="ink" type="button" data-c="#1d7a3a" style="background:#1d7a3a" aria-pressed="false" aria-label="أخضر"></button>
+    </div>
+    <label class="inks"><input type="checkbox" id="cropC" checked> قص الفراغ حول الختم تلقائياً</label>
+    <p class="hint" style="margin:0">زِد «الدقة» إذا بقيت آثار للورق، وقللها إذا اختفت أجزاء من الختم.</p>
+    <div class="foot"><button class="btn main" id="bgSave" type="button">حفظ الختم</button><button class="btn" id="bgCancel" type="button">إلغاء</button></div>
+  </div>
+</div>
+
+<div class="modal" id="padModal" hidden>
+  <div class="dlg" role="dialog" aria-modal="true" aria-labelledby="padT">
+    <h3 id="padT">ارسم توقيعك</h3>
+    <canvas class="pad" id="pad"></canvas>
+    <div class="inks" id="penInks"><span>اللون:</span>
+      <button class="ink" type="button" data-c="#1f3bb3" style="background:#1f3bb3" aria-pressed="true" aria-label="أزرق"></button>
+      <button class="ink" type="button" data-c="#111111" style="background:#111" aria-pressed="false" aria-label="أسود"></button>
+      <button class="ink" type="button" data-c="#c81e28" style="background:#c81e28" aria-pressed="false" aria-label="أحمر"></button>
+    </div>
+    <label class="row"><span>سُمك القلم</span><input type="range" id="penR" min="1.5" max="9" step="0.5" value="3.5"><output id="penO">3.5</output></label>
+    <div class="foot"><button class="btn main" id="padSave" type="button">حفظ التوقيع</button><button class="btn" id="padClear" type="button">مسح</button><button class="btn" id="padCancel" type="button">إلغاء</button></div>
+  </div>
+</div>
+
+<div class="drop" id="drop" hidden>أفلت الملف هنا</div>
+<div class="toast" id="toast" hidden></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf-lib/1.17.1/pdf-lib.min.js"></script>
+<script>
+{
+const $ = id => document.getElementById(id);
+const PDFJS = window.pdfjsLib;
+if (PDFJS) PDFJS.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+const uid = () => Math.random().toString(36).slice(2, 10);
+const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+let toastT;
+const toast = (m, ms = 2600) => { const t = $('toast'); t.textContent = m; t.hidden = false; clearTimeout(toastT); toastT = setTimeout(() => t.hidden = true, ms); };
+
+/* ---------- state ---------- */
+let stamps = [];            // {id, url, w, h, img}
+let doc = null;             // {kind, name, bytes?, pages:[{w,h,vp?,rot,canvas,el,layer}], src?}
+let places = [];            // {id, page, sid, cx, cy, w, rot, op}
+let selId = null;
+const hist = [];
+
+const snap = () => { hist.push(JSON.stringify(places)); if (hist.length > 60) hist.shift(); $('undoBtn').disabled = false; };
+const undo = () => { if (!hist.length) return; places = JSON.parse(hist.pop()); if (!places.find(p => p.id === selId)) selId = null; $('undoBtn').disabled = !hist.length; renderPlaces(); };
+
+const loadImg = url => new Promise((ok, no) => { const i = new Image(); i.onload = () => ok(i); i.onerror = no; i.src = url; });
+
+function saveLib() {
+  try { localStorage.setItem('stamp-lib-v1', JSON.stringify(stamps.filter(s => !s.sample).map(s => ({ id: s.id, url: s.url })))); }
+  catch (e) { toast('تعذّر حفظ الأختام في المتصفح (المساحة ممتلئة أو التخزين مغلق).'); }
+}
+async function addStamp(url, opts = {}) {
+  const img = await loadImg(url);
+  const s = { id: opts.id || uid(), url, w: img.naturalWidth, h: img.naturalHeight, img, sample: !!opts.sample };
+  stamps.push(s);
+  if (!opts.quiet) saveLib();
+  renderLib();
+  return s;
+}
+function renderLib() {
+  const lib = $('lib'); lib.innerHTML = '';
+  if (!stamps.length) { lib.innerHTML = '<p class="empty" style="grid-column:1/-1">لا توجد أختام بعد.</p>'; return; }
+  for (const s of stamps) {
+    const d = document.createElement('div'); d.className = 'st'; d.tabIndex = 0; d.title = 'ضع على الصفحة';
+    d.setAttribute('role', 'button');
+    const im = document.createElement('img'); im.src = s.url; im.alt = 'ختم';
+    const x = document.createElement('button'); x.className = 'x'; x.type = 'button'; x.textContent = '×'; x.setAttribute('aria-label', 'حذف من المكتبة');
+    x.onclick = e => { e.stopPropagation(); stamps = stamps.filter(t => t !== s); snap(); places = places.filter(p => p.sid !== s.id); saveLib(); renderLib(); renderPlaces(); };
+    d.onclick = () => placeStamp(s);
+    d.onkeydown = e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); placeStamp(s); } };
+    d.append(im, x); lib.append(d);
+  }
+}
+
+/* ---------- document ---------- */
+function visiblePage() {
+  if (!doc) return 0;
+  let best = 0, bestA = -1; const vh = innerHeight;
+  doc.pages.forEach((p, i) => { const r = p.el.getBoundingClientRect(); const a = Math.max(0, Math.min(r.bottom, vh) - Math.max(r.top, 0)); if (a > bestA) { bestA = a; best = i; } });
+  return best;
+}
+function placeStamp(s, page = visiblePage()) {
+  if (!doc) return toast('افتح ملفاً أولاً.');
+  snap();
+  const pg = doc.pages[page]; const pr = pg.el.getBoundingClientRect();
+  const w = clamp(0.22 * (s.w > s.h * 2.2 ? 1.4 : 1), 0.05, 0.6);
+  const vh = innerHeight; const midY = clamp((vh / 2 - pr.top) / pr.height, 0.15, 0.85);
+  const p = { id: uid(), page, sid: s.id, cx: 0.5, cy: midY, w, rot: 0, op: 1 };
+  places.push(p); selId = p.id; renderPlaces();
+}
+
+function buildPages() {
+  const host = $('pages'); host.innerHTML = '';
+  doc.pages.forEach((p, i) => {
+    const el = document.createElement('div'); el.className = 'page';
+    el.append(p.canvas);
+    const n = document.createElement('div'); n.className = 'num'; n.textContent = doc.pages.length > 1 ? `صفحة ${i + 1} من ${doc.pages.length}` : '';
+    el.append(n);
+    el.addEventListener('pointerdown', e => { if (e.target === el || e.target === p.canvas) { selId = null; renderPlaces(); } });
+    p.el = el; host.append(el);
+  });
+  $('docName').textContent = doc.name;
+  $('docInfo').textContent = (doc.kind === 'pdf' ? 'PDF · ' : 'صورة · ') + (doc.pages.length > 1 ? doc.pages.length + ' صفحات' : 'صفحة واحدة');
+  $('pngBtn').title = doc.kind === 'pdf' ? 'يحمّل الصفحة الظاهرة كصورة' : '';
+}
+
+async function openPdf(file) {
+  if (!PDFJS) return toast('مكتبة قراءة PDF لم تُحمّل. تحقق من الاتصال.');
+  $('pages').innerHTML = '<p class="busy">جاري فتح الملف…</p>';
+  const bytes = new Uint8Array(await file.arrayBuffer());
+  const pdf = await PDFJS.getDocument({ data: bytes.slice() }).promise;
+  const pages = [];
+  for (let i = 1; i <= pdf.numPages; i++) {
+    const pg = await pdf.getPage(i);
+    const vp = pg.getViewport({ scale: 1 });
+    const scale = Math.min(2.2, 1500 / vp.width);
+    const v2 = pg.getViewport({ scale });
+    const c = document.createElement('canvas'); c.width = Math.round(v2.width); c.height = Math.round(v2.height);
+    await pg.render({ canvasContext: c.getContext('2d'), viewport: v2 }).promise;
+    pages.push({ w: vp.width, h: vp.height, vp, rot: pg.rotate || 0, canvas: c });
+  }
+  doc = { kind: 'pdf', name: file.name, bytes, pages };
+}
+async function openImage(file) {
+  const url = URL.createObjectURL(file);
+  const img = await loadImg(url);
+  const c = document.createElement('canvas');
+  const sc = Math.min(1, 1600 / img.naturalWidth);
+  c.width = Math.round(img.naturalWidth * sc); c.height = Math.round(img.naturalHeight * sc);
+  c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
+  doc = { kind: 'image', name: file.name, src: img, type: file.type, pages: [{ w: img.naturalWidth, h: img.naturalHeight, rot: 0, canvas: c }] };
+}
+async function openDoc(file) {
+  if (!file) return;
+  try {
+    if (file.type === 'application/pdf' || /\.pdf$/i.test(file.name)) await openPdf(file);
+    else if (file.type.startsWith('image/')) await openImage(file);
+    else return toast('نوع الملف غير مدعوم. استخدم PDF أو صورة.');
+    hist.length = 0; $('undoBtn').disabled = true; places = []; selId = null;
+    buildPages(); renderPlaces();
+    toast('تم فتح الملف. اختر ختماً لوضعه.');
+  } catch (e) { console.error(e); $('pages').innerHTML = ''; toast('تعذّر فتح الملف. قد يكون تالفاً أو محمياً بكلمة مرور.'); if (doc) { buildPages(); renderPlaces(); } }
+}
+
+/* ---------- placements ---------- */
+const stampOf = p => stamps.find(s => s.id === p.sid);
+
+function renderPlaces() {
+  if (!doc) return;
+  doc.pages.forEach(pg => pg.el.querySelectorAll('.pl').forEach(n => n.remove()));
+  places = places.filter(p => stampOf(p) && doc.pages[p.page]);
+  for (const p of places) {
+    const pg = doc.pages[p.page]; const s = stampOf(p);
+    const pw = pg.vp ? pg.vp.width : pg.w, ph = pg.vp ? pg.vp.height : pg.h;
+    const h = p.w * (s.h / s.w) * (pw / ph);
+    const d = document.createElement('div'); d.className = 'pl' + (p.id === selId ? ' on' : '');
+    Object.assign(d.style, { left: (p.cx - p.w / 2) * 100 + '%', top: (p.cy - h / 2) * 100 + '%', width: p.w * 100 + '%', height: h * 100 + '%', transform: `rotate(${p.rot}deg)`, opacity: p.op });
+    d.innerHTML = '<img alt=""><span class="hd dl" title="حذف">×</span><span class="hd rt" title="تدوير">⟳</span><span class="hd sz" title="تكبير/تصغير">⤡</span>';
+    d.querySelector('img').src = s.url;
+    d.addEventListener('pointerdown', e => startDrag(e, p, d));
+    pg.el.append(d);
+  }
+  syncSel();
+}
+function syncSel() {
+  const p = places.find(q => q.id === selId);
+  $('selCtl').hidden = !p; $('selEmpty').hidden = !!p;
+  if (!p) return;
+  $('szR').value = (p.w * 100).toFixed(1); $('szO').textContent = Math.round(p.w * 100) + '%';
+  $('rtR').value = Math.round(p.rot); $('rtO').textContent = Math.round(p.rot) + '°';
+  $('opR').value = Math.round(p.op * 100); $('opO').textContent = Math.round(p.op * 100) + '%';
+  $('allBtn').hidden = doc.pages.length < 2;
+}
+function startDrag(e, p, el) {
+  e.preventDefault(); e.stopPropagation();
+  const kind = e.target.classList.contains('sz') ? 'size' : e.target.classList.contains('rt') ? 'rot' : e.target.classList.contains('dl') ? 'del' : 'move';
+  if (kind === 'del') { snap(); places = places.filter(q => q !== p); selId = null; renderPlaces(); return; }
+  if (selId !== p.id) { selId = p.id; document.querySelectorAll('.pl.on').forEach(n => n.classList.remove('on')); el.classList.add('on'); syncSel(); }
+  const pr = doc.pages[p.page].el.getBoundingClientRect();
+  const cxp = pr.left + p.cx * pr.width, cyp = pr.top + p.cy * pr.height;
+  const st = { x: e.clientX, y: e.clientY, cx: p.cx, cy: p.cy, w: p.w, rot: p.rot, dist: Math.hypot(e.clientX - cxp, e.clientY - cyp) || 1, ang: Math.atan2(e.clientY - cyp, e.clientX - cxp) };
+  let moved = false; const before = JSON.stringify(places);
+  el.setPointerCapture(e.pointerId);
+  const mv = ev => {
+    moved = true;
+    if (kind === 'move') { p.cx = clamp(st.cx + (ev.clientX - st.x) / pr.width, 0, 1); p.cy = clamp(st.cy + (ev.clientY - st.y) / pr.height, 0, 1); }
+    else if (kind === 'size') { p.w = clamp(st.w * Math.hypot(ev.clientX - cxp, ev.clientY - cyp) / st.dist, 0.03, 0.95); }
+    else { let r = st.rot + (Math.atan2(ev.clientY - cyp, ev.clientX - cxp) - st.ang) * 180 / Math.PI; r = ((r + 540) % 360) - 180; if (Math.abs(r) < 3) r = 0; p.rot = r; }
+    applyStyle(p, el);
+  };
+  const up = () => { el.removeEventListener('pointermove', mv); el.removeEventListener('pointerup', up); el.removeEventListener('pointercancel', up); if (moved) { hist.push(before); $('undoBtn').disabled = false; } syncSel(); };
+  el.addEventListener('pointermove', mv); el.addEventListener('pointerup', up); el.addEventListener('pointercancel', up);
+}
+function applyStyle(p, el) {
+  const pg = doc.pages[p.page]; const s = stampOf(p);
+  const pw = pg.vp ? pg.vp.width : pg.w, ph = pg.vp ? pg.vp.height : pg.h;
+  const h = p.w * (s.h / s.w) * (pw / ph);
+  Object.assign(el.style, { left: (p.cx - p.w / 2) * 100 + '%', top: (p.cy - h / 2) * 100 + '%', width: p.w * 100 + '%', height: h * 100 + '%', transform: `rotate(${p.rot}deg)`, opacity: p.op });
+}
+const selP = () => places.find(q => q.id === selId);
+let sliderSnap = false;
+for (const [rid, fn] of [['szR', (p, v) => p.w = v / 100], ['rtR', (p, v) => p.rot = v], ['opR', (p, v) => p.op = v / 100]]) {
+  $(rid).addEventListener('pointerdown', () => sliderSnap = false);
+  $(rid).addEventListener('input', e => { const p = selP(); if (!p) return; if (!sliderSnap) { snap(); sliderSnap = true; } fn(p, +e.target.value); const el = document.querySelector('.pl.on'); if (el) applyStyle(p, el); syncSel(); });
+  $(rid).addEventListener('change', () => sliderSnap = false);
+}
+$('delBtn').onclick = () => { const p = selP(); if (!p) return; snap(); places = places.filter(q => q !== p); selId = null; renderPlaces(); };
+$('dupBtn').onclick = () => { const p = selP(); if (!p) return; snap(); const n = { ...p, id: uid(), cx: clamp(p.cx + 0.04, 0, 1), cy: clamp(p.cy + 0.04, 0, 1) }; places.push(n); selId = n.id; renderPlaces(); };
+$('allBtn').onclick = () => { const p = selP(); if (!p) return; snap(); doc.pages.forEach((_, i) => { if (i !== p.page && !places.some(q => q.page === i && q.sid === p.sid)) places.push({ ...p, id: uid(), page: i }); }); renderPlaces(); toast('أُضيف الختم بنفس المكان على كل الصفحات.'); };
+$('undoBtn').onclick = undo;
+addEventListener('keydown', e => {
+  if (e.target.closest('input,textarea')) return;
+  if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'z') { e.preventDefault(); undo(); }
+  else if ((e.key === 'Delete' || e.key === 'Backspace') && selP()) { e.preventDefault(); $('delBtn').click(); }
+});
+
+/* ---------- background removal ---------- */
+let bgState = null, ink = '';
+function hexRgb(h) { const n = parseInt(h.slice(1), 16); return [n >> 16 & 255, n >> 8 & 255, n & 255]; }
+async function openBgEditor(file) {
+  const url = URL.createObjectURL(file);
+  const img = await loadImg(url).catch(() => null);
+  if (!img) return toast('تعذّر قراءة الصورة.');
+  const sc = Math.min(1, 1400 / Math.max(img.naturalWidth, img.naturalHeight));
+  const c = document.createElement('canvas'); c.width = Math.max(1, Math.round(img.naturalWidth * sc)); c.height = Math.max(1, Math.round(img.naturalHeight * sc));
+  const x = c.getContext('2d', { willReadFrequently: true }); x.drawImage(img, 0, 0, c.width, c.height);
+  const src = x.getImageData(0, 0, c.width, c.height);
+  // estimate paper colour from the border; detect already-transparent images
+  const d = src.data, W = c.width, H = c.height; let r = 0, g = 0, b = 0, n = 0, tr = 0, tot = 0;
+  const sample = (i) => { tot++; if (d[i + 3] < 30) { tr++; return; } r += d[i]; g += d[i + 1]; b += d[i + 2]; n++; };
+  const step = Math.max(1, Math.floor((W + H) / 400));
+  for (let i = 0; i < W; i += step) { sample(i * 4); sample(((H - 1) * W + i) * 4); }
+  for (let j = 0; j < H; j += step) { sample(j * W * 4); sample((j * W + W - 1) * 4); }
+  const bg = n ? [r / n, g / n, b / n] : [255, 255, 255];
+  const already = tr / tot > 0.5;
+  bgState = { src, W, H, bg, already };
+  $('bgSrc').src = url;
+  $('tolR').value = already ? 0 : 60; $('tolO').textContent = $('tolR').value;
+  $('bgNote').textContent = already ? 'الصورة شفافة أصلاً — جاهزة' : 'بعد إزالة الخلفية';
+  ink = ''; document.querySelectorAll('#inks .ink').forEach(b => b.setAttribute('aria-pressed', b.dataset.c === '' ? 'true' : 'false'));
+  $('bgModal').hidden = false; processBg();
+}
+function processBg() {
+  if (!bgState) return;
+  const { src, W, H, bg, already } = bgState;
+  const tol = +$('tolR').value, soft = +$('softR').value;
+  const out = new ImageData(W, H); const s = src.data, o = out.data;
+  const ik = ink ? hexRgb(ink) : null;
+  let x0 = W, y0 = H, x1 = -1, y1 = -1;
+  for (let i = 0, p = 0; i < s.length; i += 4, p++) {
+    const dr = s[i] - bg[0], dg = s[i + 1] - bg[1], db = s[i + 2] - bg[2];
+    const dist = Math.sqrt(dr * dr + dg * dg + db * db);
+    let a = already && tol === 0 ? 1 : clamp((dist - tol) / soft, 0, 1);
+    a *= s[i + 3] / 255;
+    if (ik) { o[i] = ik[0]; o[i + 1] = ik[1]; o[i + 2] = ik[2]; }
+    else if (a > 0 && !already) { // un-mix the paper colour so edges keep the ink's own hue
+      const k = clamp(dist / Math.max(1, tol + soft), 0.001, 1);
+      o[i] = clamp((s[i] - bg[0] * (1 - k)) / k, 0, 255); o[i + 1] = clamp((s[i + 1] - bg[1] * (1 - k)) / k, 0, 255); o[i + 2] = clamp((s[i + 2] - bg[2] * (1 - k)) / k, 0, 255);
+    } else { o[i] = s[i]; o[i + 1] = s[i + 1]; o[i + 2] = s[i + 2]; }
+    o[i + 3] = Math.round(a * 255);
+    if (o[i + 3] > 24) { const x = p % W, y = (p / W) | 0; if (x < x0) x0 = x; if (x > x1) x1 = x; if (y < y0) y0 = y; if (y > y1) y1 = y; }
+  }
+  const full = document.createElement('canvas'); full.width = W; full.height = H; full.getContext('2d').putImageData(out, 0, 0);
+  let res = full;
+  if ($('cropC').checked && x1 >= x0) {
+    const pad = Math.round(Math.max(W, H) * 0.01) + 2;
+    x0 = Math.max(0, x0 - pad); y0 = Math.max(0, y0 - pad); x1 = Math.min(W - 1, x1 + pad); y1 = Math.min(H - 1, y1 + pad);
+    res = document.createElement('canvas'); res.width = x1 - x0 + 1; res.height = y1 - y0 + 1;
+    res.getContext('2d').drawImage(full, -x0, -y0);
+  }
+  bgState.result = res;
+  const view = $('bgOut'); view.width = res.width; view.height = res.height; view.getContext('2d').drawImage(res, 0, 0);
+  bgState.empty = x1 < x0;
+}
+let bgT;
+['tolR', 'softR'].forEach(id => $(id).addEventListener('input', e => { $(id.replace('R', 'O')).textContent = e.target.value; clearTimeout(bgT); bgT = setTimeout(processBg, 30); }));
+$('cropC').onchange = processBg;
+$('inks').addEventListener('click', e => { const b = e.target.closest('.ink'); if (!b) return; ink = b.dataset.c; document.querySelectorAll('#inks .ink').forEach(x => x.setAttribute('aria-pressed', x === b ? 'true' : 'false')); processBg(); });
+$('bgCancel').onclick = () => { $('bgModal').hidden = true; bgState = null; };
+$('bgSave').onclick = async () => {
+  if (!bgState || bgState.empty) return toast('لم يبقَ شيء من الصورة. قلّل «الدقة».');
+  let c = bgState.result; const m = Math.max(c.width, c.height);
+  if (m > 900) { const k = 900 / m, t = document.createElement('canvas'); t.width = Math.round(c.width * k); t.height = Math.round(c.height * k); t.getContext('2d').drawImage(c, 0, 0, t.width, t.height); c = t; }
+  const s = await addStamp(c.toDataURL('image/png'));
+  $('bgModal').hidden = true; bgState = null;
+  if (doc) placeStamp(s);
+};
+
+/* ---------- signature pad ---------- */
+let pen = '#1f3bb3', padCtx, drawing = false, last = null, padDirty = false;
+function openPad() {
+  $('padModal').hidden = false;
+  const c = $('pad'), r = c.getBoundingClientRect(), dpr = Math.min(3, devicePixelRatio || 1);
+  c.width = Math.round(r.width * dpr); c.height = Math.round(r.height * dpr);
+  padCtx = c.getContext('2d'); padCtx.setTransform(dpr, 0, 0, dpr, 0, 0); padCtx.lineCap = 'round'; padCtx.lineJoin = 'round';
+  padDirty = false;
+}
+const padPt = e => { const r = $('pad').getBoundingClientRect(); return { x: e.clientX - r.left, y: e.clientY - r.top, p: e.pressure || 0.5 }; };
+$('pad').addEventListener('pointerdown', e => { drawing = true; last = padPt(e); $('pad').setPointerCapture(e.pointerId); });
+$('pad').addEventListener('pointermove', e => {
+  if (!drawing) return; const pt = padPt(e);
+  const v = Math.hypot(pt.x - last.x, pt.y - last.y);
+  padCtx.strokeStyle = pen; padCtx.lineWidth = +$('penR').value * clamp(1.25 - v / 40, 0.55, 1.2);
+  padCtx.beginPath(); padCtx.moveTo(last.x, last.y); padCtx.quadraticCurveTo(last.x, last.y, (last.x + pt.x) / 2, (last.y + pt.y) / 2); padCtx.lineTo(pt.x, pt.y); padCtx.stroke();
+  last = pt; padDirty = true;
+});
+['pointerup', 'pointercancel'].forEach(t => $('pad').addEventListener(t, () => drawing = false));
+$('penInks').addEventListener('click', e => { const b = e.target.closest('.ink'); if (!b) return; pen = b.dataset.c; document.querySelectorAll('#penInks .ink').forEach(x => x.setAttribute('aria-pressed', x === b ? 'true' : 'false')); });
+$('penR').oninput = e => $('penO').textContent = e.target.value;
+$('padClear').onclick = () => { const c = $('pad'); padCtx.save(); padCtx.setTransform(1, 0, 0, 1, 0, 0); padCtx.clearRect(0, 0, c.width, c.height); padCtx.restore(); padDirty = false; };
+$('padCancel').onclick = () => $('padModal').hidden = true;
+$('padSave').onclick = async () => {
+  if (!padDirty) return toast('ارسم توقيعك أولاً.');
+  const s = await addStamp(trim($('pad')).toDataURL('image/png'));
+  $('padModal').hidden = true; if (doc) placeStamp(s);
+};
+function trim(c) {
+  const x = c.getContext('2d'), d = x.getImageData(0, 0, c.width, c.height).data;
+  let x0 = c.width, y0 = c.height, x1 = -1, y1 = -1;
+  for (let y = 0; y < c.height; y++) for (let X = 0; X < c.width; X++) if (d[(y * c.width + X) * 4 + 3] > 10) { if (X < x0) x0 = X; if (X > x1) x1 = X; if (y < y0) y0 = y; if (y > y1) y1 = y; }
+  if (x1 < 0) return c;
+  const pad = 8, t = document.createElement('canvas');
+  x0 = Math.max(0, x0 - pad); y0 = Math.max(0, y0 - pad); x1 = Math.min(c.width - 1, x1 + pad); y1 = Math.min(c.height - 1, y1 + pad);
+  t.width = x1 - x0 + 1; t.height = y1 - y0 + 1; t.getContext('2d').drawImage(c, -x0, -y0); return t;
+}
+
+/* ---------- export ---------- */
+const outName = ext => (doc.name.replace(/\.[^.]+$/, '') || 'ملف') + '-مختوم.' + ext;
+async function saveFile(filename, blob) {
+  try {
+    const dl = window.claude && window.claude.use ? await window.claude.use('downloads') : null;
+    if (dl) { await dl.save({ filename, data: blob }); toast('تم الحفظ: ' + filename); return; }
+  } catch (e) { if (e && e.code === 'declined') return toast('أُلغي الحفظ.'); if (e && e.code && !['unavailable', 'not_granted', 'capability_disabled', 'capability_removed'].includes(e.code)) return toast('تعذّر الحفظ هنا. افتح الأداة في متصفح.'); }
+  const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = filename; document.body.append(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(a.href), 4000); toast('تم التحميل: ' + filename);
+}
+const dataUrlBytes = u => Uint8Array.from(atob(u.split(',')[1]), ch => ch.charCodeAt(0));
+
+function compose(pageIdx, W, H, base) {
+  const c = document.createElement('canvas'); c.width = W; c.height = H; const x = c.getContext('2d');
+  x.fillStyle = '#fff'; x.fillRect(0, 0, W, H); x.drawImage(base, 0, 0, W, H);
+  for (const p of places.filter(q => q.page === pageIdx)) {
+    const s = stampOf(p); const w = p.w * W, h = w * s.h / s.w;
+    x.save(); x.globalAlpha = p.op; x.translate(p.cx * W, p.cy * H); x.rotate(p.rot * Math.PI / 180); x.drawImage(s.img, -w / 2, -h / 2, w, h); x.restore();
+  }
+  return c;
+}
+const toBlob = (c, t, q) => new Promise(ok => c.toBlob(ok, t, q));
+
+async function exportPdf() {
+  if (!doc) return toast('افتح ملفاً أولاً.');
+  if (!window.PDFLib) return toast('مكتبة PDF لم تُحمّل. تحقق من الاتصال.');
+  const { PDFDocument, degrees } = PDFLib;
+  $('pdfBtn').disabled = true;
+  try {
+    let out;
+    if (doc.kind === 'pdf') {
+      out = await PDFDocument.load(doc.bytes, { ignoreEncryption: true });
+      const pages = out.getPages(); const cache = {};
+      for (const p of places) {
+        const s = stampOf(p), pg = doc.pages[p.page], page = pages[p.page];
+        if (!page) continue;
+        const emb = cache[s.id] || (cache[s.id] = await out.embedPng(dataUrlBytes(s.url)));
+        const vw = pg.vp.width, vh = pg.vp.height;
+        const w = p.w * vw, h = w * s.h / s.w;
+        const [cx, cy] = pg.vp.convertToPdfPoint(p.cx * vw, p.cy * vh);
+        const a = (pg.rot - p.rot) * Math.PI / 180;
+        const x = cx - (w / 2 * Math.cos(a) - h / 2 * Math.sin(a));
+        const y = cy - (w / 2 * Math.sin(a) + h / 2 * Math.cos(a));
+        page.drawImage(emb, { x, y, width: w, height: h, rotate: degrees(pg.rot - p.rot), opacity: p.op });
+      }
+    } else {
+      out = await PDFDocument.create();
+      const pg = doc.pages[0], c = compose(0, pg.w, pg.h, doc.src);
+      const jpg = await out.embedJpg(new Uint8Array(await (await toBlob(c, 'image/jpeg', 0.92)).arrayBuffer()));
+      const k = Math.min(1, 842 / Math.max(pg.w, pg.h)) || 0.75; const page = out.addPage([pg.w * k, pg.h * k]);
+      page.drawImage(jpg, { x: 0, y: 0, width: pg.w * k, height: pg.h * k });
+    }
+    const bytes = await out.save();
+    await saveFile(outName('pdf'), new Blob([bytes], { type: 'application/pdf' }));
+  } catch (e) { console.error(e); toast('تعذّر إنشاء ملف PDF. قد يكون الملف محمياً.'); }
+  finally { $('pdfBtn').disabled = false; }
+}
+async function exportPng() {
+  if (!doc) return toast('افتح ملفاً أولاً.');
+  const i = doc.kind === 'pdf' ? visiblePage() : 0, pg = doc.pages[i];
+  const base = doc.kind === 'image' ? doc.src : pg.canvas;
+  const W = doc.kind === 'image' ? pg.w : pg.canvas.width, H = doc.kind === 'image' ? pg.h : pg.canvas.height;
+  const c = compose(i, W, H, base);
+  const isJpg = doc.kind === 'image' && /jpe?g/.test(doc.type || '');
+  const blob = await toBlob(c, isJpg ? 'image/jpeg' : 'image/png', 0.95);
+  const ext = isJpg ? 'jpg' : 'png';
+  await saveFile(doc.kind === 'pdf' && doc.pages.length > 1 ? outName(ext).replace('-مختوم', '-ص' + (i + 1) + '-مختوم') : outName(ext), blob);
+}
+$('pdfBtn').onclick = exportPdf;
+$('pngBtn').onclick = exportPng;
+
+/* ---------- inputs ---------- */
+$('openBtn').onclick = () => $('docIn').click();
+$('docIn').onchange = e => { openDoc(e.target.files[0]); e.target.value = ''; };
+$('addStampBtn').onclick = () => $('stampIn').click();
+$('stampIn').onchange = e => { const f = e.target.files[0]; if (f) openBgEditor(f); e.target.value = ''; };
+$('drawBtn').onclick = openPad;
+let dragN = 0;
+addEventListener('dragenter', e => { e.preventDefault(); dragN++; $('drop').hidden = false; });
+addEventListener('dragleave', () => { if (--dragN <= 0) { dragN = 0; $('drop').hidden = true; } });
+addEventListener('dragover', e => e.preventDefault());
+addEventListener('drop', e => { e.preventDefault(); dragN = 0; $('drop').hidden = true; const f = e.dataTransfer.files[0]; if (f) openDoc(f); });
+document.querySelectorAll('.modal').forEach(m => m.addEventListener('pointerdown', e => { if (e.target === m) m.hidden = true; }));
+
+/* ---------- sample content so the tool opens working ---------- */
+function sampleStamp() {
+  const S = 420, c = document.createElement('canvas'); c.width = c.height = S; const x = c.getContext('2d');
+  const col = '#1f3bb3'; x.strokeStyle = col; x.fillStyle = col; x.translate(S / 2, S / 2);
+  x.lineWidth = 9; x.beginPath(); x.arc(0, 0, 196, 0, 7); x.stroke();
+  x.lineWidth = 3; x.beginPath(); x.arc(0, 0, 178, 0, 7); x.stroke();
+  x.beginPath(); x.arc(0, 0, 112, 0, 7); x.stroke();
+  x.font = '600 34px "IBM Plex Sans Arabic", Tahoma, sans-serif'; x.textAlign = 'center'; x.textBaseline = 'middle';
+  const txt = 'شركة المثال للتجارة ★ الإدارة العامة ★ ';
+  const chars = [...txt]; const step = (Math.PI * 2) / chars.length;
+  chars.forEach((ch, i) => { x.save(); x.rotate(-i * step); x.translate(0, -146); x.fillText(ch, 0, 0); x.restore(); });
+  x.font = '700 46px "Noto Kufi Arabic", Tahoma, sans-serif'; x.fillText('معتمد', 0, -8);
+  x.font = '500 26px "IBM Plex Sans Arabic", Tahoma, sans-serif'; x.fillText('٢٠٢٦', 0, 44);
+  // ink texture: knock out speckles
+  const id = x.getImageData(0, 0, S, S); let seed = 7;
+  for (let i = 3; i < id.data.length; i += 4) { seed = seed * 16807 % 2147483647; if (id.data[i] && seed % 9 === 0) id.data[i] *= 0.55; }
+  x.putImageData(id, 0, 0);
+  return c.toDataURL('image/png');
+}
+function sampleSign() {
+  const c = document.createElement('canvas'); c.width = 520; c.height = 200; const x = c.getContext('2d');
+  x.strokeStyle = '#141a3a'; x.lineCap = 'round'; x.lineJoin = 'round';
+  const pts = []; for (let t = 0; t <= 1; t += 0.004) pts.push([40 + t * 430 + 34 * Math.sin(t * 22), 110 - 46 * Math.sin(t * 9) * Math.exp(-t * 1.4) + 12 * Math.cos(t * 31)]);
+  pts.forEach((p, i) => { if (!i) return; x.lineWidth = 2.2 + 2.6 * Math.abs(Math.sin(i / 23)); x.beginPath(); x.moveTo(...pts[i - 1]); x.lineTo(...p); x.stroke(); });
+  x.lineWidth = 3; x.beginPath(); x.moveTo(70, 160); x.quadraticCurveTo(260, 140, 470, 150); x.stroke();
+  return c.toDataURL('image/png');
+}
+function sampleDoc() {
+  const W = 1240, H = 1754, c = document.createElement('canvas'); c.width = W; c.height = H; const x = c.getContext('2d');
+  x.fillStyle = '#fff'; x.fillRect(0, 0, W, H); x.direction = 'rtl'; x.textAlign = 'right';
+  x.fillStyle = '#1f3bb3'; x.fillRect(0, 0, W, 16);
+  x.fillStyle = '#16181d'; x.font = '700 44px "Noto Kufi Arabic", Tahoma, sans-serif'; x.fillText('شركة المثال للتجارة', W - 110, 150);
+  x.font = '400 24px "IBM Plex Sans Arabic", Tahoma, sans-serif'; x.fillStyle = '#5b5f69';
+  x.fillText('الرياض · ص.ب ١٢٣٤٥ · هاتف ٥٥٥٠١٢٣ ٠١١', W - 110, 196);
+  x.strokeStyle = '#d3cfc6'; x.lineWidth = 2; x.beginPath(); x.moveTo(110, 236); x.lineTo(W - 110, 236); x.stroke();
+  x.fillStyle = '#16181d'; x.font = '500 26px "IBM Plex Sans Arabic", Tahoma, sans-serif';
+  x.fillText('التاريخ: ٢٥ نوفمبر ٢٠٢٦', W - 110, 300); x.fillText('الرقم: ٤٧/ت/٢٠٢٦', W - 110, 344);
+  x.font = '700 36px "Noto Kufi Arabic", Tahoma, sans-serif'; x.textAlign = 'center'; x.fillText('خطاب تعريف', W / 2, 440); x.textAlign = 'right';
+  x.font = '400 28px "IBM Plex Sans Arabic", Tahoma, sans-serif';
+  const lines = ['إلى من يهمه الأمر،', '', 'تشهد شركة المثال للتجارة بأن السيد/ أحمد محمد يعمل لديها بوظيفة', 'محاسب أول منذ ١ مارس ٢٠٢٢م وحتى تاريخه، براتب شهري إجمالي', 'قدره ١٢٬٠٠٠ ريال سعودي، وهو على رأس العمل.', '', 'وقد أُعطي هذا الخطاب بناءً على طلبه دون أدنى مسؤولية على الشركة', 'تجاه الغير.', '', 'وتقبلوا فائق الاحترام والتقدير،'];
+  lines.forEach((l, i) => x.fillText(l, W - 110, 540 + i * 56));
+  x.font = '600 28px "IBM Plex Sans Arabic", Tahoma, sans-serif'; x.fillText('مدير الموارد البشرية', W - 140, 1220);
+  x.font = '400 26px "IBM Plex Sans Arabic", Tahoma, sans-serif'; x.fillText('التوقيع: ...............................', W - 140, 1290);
+  x.fillText('الختم:', 470, 1220);
+  x.fillStyle = '#9aa0ab'; x.font = '400 20px "IBM Plex Sans Arabic", Tahoma, sans-serif'; x.textAlign = 'center';
+  x.fillText('مستند تجريبي للعرض فقط — افتح ملفك من زر «افتح ملف»', W / 2, H - 70);
+  return c;
+}
+
+async function boot() {
+  try { await Promise.race([Promise.all([document.fonts.load('700 40px "Noto Kufi Arabic"'), document.fonts.load('400 20px "IBM Plex Sans Arabic"'), document.fonts.load('600 20px "IBM Plex Sans Arabic"')]), new Promise(r => setTimeout(r, 2500))]); } catch (e) {}
+  let saved = [];
+  try { saved = JSON.parse(localStorage.getItem('stamp-lib-v1') || '[]'); } catch (e) {}
+  for (const s of saved) { try { await addStamp(s.url, { id: s.id, quiet: true }); } catch (e) {} }
+  const st = await addStamp(sampleStamp(), { sample: true, quiet: true });
+  const sg = await addStamp(sampleSign(), { sample: true, quiet: true });
+  const c = sampleDoc();
+  doc = { kind: 'image', name: 'خطاب تجريبي (مثال)', src: c, type: 'image/png', pages: [{ w: c.width, h: c.height, rot: 0, canvas: c }] };
+  const view = document.createElement('canvas'); view.width = c.width; view.height = c.height; view.getContext('2d').drawImage(c, 0, 0); doc.pages[0].canvas = view;
+  buildPages();
+  places = [{ id: uid(), page: 0, sid: st.id, cx: 0.27, cy: 0.735, w: 0.26, rot: -12, op: 0.92 }, { id: uid(), page: 0, sid: sg.id, cx: 0.64, cy: 0.725, w: 0.3, rot: 0, op: 1 }];
+  selId = places[0].id;
+  renderPlaces();
+}
+boot();
+}
+</script>
+</body>
+</html>
